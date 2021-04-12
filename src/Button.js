@@ -10,7 +10,11 @@ scss.global`
 	}
 `
 
-export default function ({ red, green, indigo, children }) {
+function clsx(...classNames) {
+	return classNames.filter(Boolean).join(" ")
+}
+
+export default function Button({ className, red, green, indigo, children, ...props }) {
 	return (
 		<>
 			{scss`
@@ -66,23 +70,27 @@ export default function ({ red, green, indigo, children }) {
 				}
 			`}
 			{(!red && !indigo && !green) && (
-				<button className="btn">
-					{children}
+				<button className={clsx("btn", className)}
+					{...props}>
+						{children}
 				</button>
 			)}
 			{red && (
-				<button className="btn btn--red">
-					{children}
+				<button className={clsx("btn btn--red", className)}
+					{...props}>
+						{children}
 				</button>
 			)}
 			{indigo && (
-				<button className="btn btn--green">
-					{children}
+				<button className={clsx("btn btn--indigo", className)}
+					{...props}>
+						{children}
 				</button>
 			)}
 			{green && (
-				<button className="btn btn--indigo">
-					{children}
+				<button className={clsx("btn btn--green", className)}
+					{...props}>
+						{children}
 				</button>
 			)}
 		</>

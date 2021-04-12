@@ -1,73 +1,54 @@
-import sass from "sass-plugin"
+import Button from "./Button"
 
-sass`
+import scss from "scss-plugin"
 
-@use "sass:color";
+scss.global`
+	@use "sass:color";
+`
 
-$gray: hsl(0, 0%, 95%);
-$gray-dark:  color.adjust(hsl(0, 0%, 95%), $lightness: -1.25 * 1%);
-$gray-light: color.adjust(hsl(0, 0%, 95%), $lightness:  1.25 * 1%);
-
-// Reset
-.btn {
-	background-color: unset;
-	border: unset;
-	&:focus {
-		outline: none;
+scss.global`
+	@mixin center($dir: row) {
+		display: flex;
+		flex-direction: $dir;
+		justify-content: center;
+		align-items: center;
 	}
-}
-
-.center {
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: center;
-	gap: 16px;
-	min-height: 100vh;
-}
-
-.btn {
-	padding: 12px 24px;
-	font-size: 18px;
-	border-radius: 8px;
-	background-color: $gray;
-	box-shadow:
-		0 0 0 0.5px hsl(0, 0%, 0%, 0.25),
-		0 0 0 0.5px hsl(0, 0%, 0%, 0.1),
-		0 2px 4px -2px hsl(0, 0%, 0%, 0.25);
-	&:hover {
-		background-color: $gray-light;
-		box-shadow:
-			0 0 0 0.5px hsl(0, 0%, 0%, 0.25),
-			0 2px 4px -2px hsl(0, 0%, 0%, 0.25),
-			0 4px 8px -4px hsl(0, 0%, 0%, 0.25);
-	}
-	&:focus {
-		background-color: $gray-dark;
-		box-shadow:
-			0 0 0 0.5px hsl(210, 100%, 50%),
-			0 0 0 3px hsla(210, 100%, 50%, 0.25);
-	}
-	transition: 150ms cubic-bezier(0, 0, 0.2, 1);
-}
-
 `
 
 export default function () {
 	return (
-		<div className="center">
-			<button className="btn">
-				Hello, world!
-      </button>
-			<button className="btn">
-				Hello, world!
-      </button>
-			<button className="btn">
-				Hello, world!
-      </button>
-			<button className="btn">
-				Hello, world!
-      </button>
-		</div>
+		<>
+			{scss`
+				.center {
+					@include center(column);
+					min-height: 100vh;
+					> * + * {
+						margin-top: 16px;
+						margin-left: revert;
+					}
+					@media (min-width: 768px) {
+						flex-direction: row;
+						> * + * {
+							margin-top: revert;
+							margin-left: 16px;
+						}
+					}
+				}
+			`}
+			<div className="center">
+				<Button>
+					Hello, world!
+				</Button>
+				<Button red>
+					Hello, world!
+				</Button>
+				<Button indigo>
+					Hello, world!
+				</Button>
+				<Button green>
+					Hello, world!
+				</Button>
+			</div>
+		</>
 	)
 }

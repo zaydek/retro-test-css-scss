@@ -1,22 +1,27 @@
-const cssRe = /^css`((?:\n.*?)+)`/gm
-const sassRe = /^sass`((?:\n.*?)+)`/gm
+const cssRe = /(?!\/\/\s*)css`((?:\n.*?)+)`/gm
+const scssGlobalRe = /(?!\/\/\s*)scss\.global`((?:\n.*?)+)`/gm
+const scssInlineRe = /(?!\/\/\s*)scss(?!\.global)`((?:\n.*?)+)`/gm
 
-function scanCSSMatches(jsContents) {
+function scanCSSMatches(contents) {
 	const matches = []
 	let match = null
-	while ((match = cssRe.exec(jsContents))) {
+	while ((match = cssRe.exec(contents))) {
 		matches.push(match[1])
 	}
 	return matches
 }
 
-function scanSassMatches(jsContents) {
-	const matches = []
+function scanSCSSMatches(contents) {
+	const globals = []
+	const inlines = []
 	let match = null
-	while ((match = sassRe.exec(jsContents))) {
-		matches.push(match[1])
+	while ((match = scssGlobalRe.exec(contents))) {
+		globals.push(match[1])
 	}
-	return matches
+	while ((match = scssInlineRe.exec(contents))) {
+		inlines.push(match[1])
+	}
+	return [globals, inlines]
 }
 
 /**
@@ -36,7 +41,7 @@ const cssPlugin = {
 				namespace: "css-ns",
 			}
 		})
-		build.onLoad({ filter: /.*/, namespace: "css-ns" }, async () => {
+		build.onLoad({ filter: /.*/, namespace: "css-ns" }, async args => {
 			const matches = []
 			for (const importer of importers) {
 				const buffer = await fs.promises.readFile(importer)
@@ -63,41 +68,62 @@ const cssPlugin = {
 /**
  * @type { import("esbuild").Plugin }
  */
-const sassPlugin = {
-	name: "sass",
+const scssPlugin = {
+	name: "scss",
 	setup(build) {
 		const fs = require("fs")
-		const sass = require("sass")
+		const scss = require("sass")
 
 		const importers = new Set()
 
-		build.onResolve({ filter: /^sass-plugin$/ }, args => {
+		build.onResolve({ filter: /^scss-plugin$/ }, args => {
 			importers.add(args.importer)
 			return {
 				path: args.path,
-				namespace: "sass-ns",
+				namespace: "scss-ns",
 			}
 		})
-		build.onLoad({ filter: /.*/, namespace: "sass-ns" }, async () => {
-			const matches = []
+		build.onLoad({ filter: /.*/, namespace: "scss-ns" }, async args => {
+			const globals = [], inlines = []
 			for (const importer of importers) {
 				const buffer = await fs.promises.readFile(importer)
-				matches.push(...scanSassMatches(buffer.toString()))
+				const [globals_, inlines_] = scanSCSSMatches(buffer.toString())
+				globals.push(...globals_)
+				inlines.push(...inlines_)
 			}
 
-			let sass_ = ""
-			for (const match of matches) {
-				if (sass_ !== "") sass_ += "\n"
-				sass_ += match
+			let allGlobals = ""
+			for (const global of globals) {
+				allGlobals += `
+					${global}
+				`
 			}
 
-			const result = sass.renderSync({ data: sass_ })
+			let allInlines = ""
+			for (const inline of inlines) {
+				allInlines += `
+					@at-root {
+						${inline}
+					}
+				`
+			}
+
+			const result = scss.renderSync({
+				data: `
+					${allGlobals}
+					${allInlines}
+				`,
+			})
 			const css = result.css.toString()
 
 			return {
 				contents: `
 					import "data:text/css,${encodeURI(css)}"
-					export default function () {}
+					function scss() {}
+					Object.assign(scss, {
+						global() {}
+					})
+					export default scss
 				`,
 				loader: "js",
 			}
@@ -109,6 +135,6 @@ module.exports = {
 	target: ["es2017"],
 	plugins: [
 		cssPlugin,
-		sassPlugin,
+		scssPlugin,
 	]
 }

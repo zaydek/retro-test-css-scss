@@ -3,10 +3,43 @@ import Button from "./Button"
 import scss from "scss-plugin"
 
 scss.global`
-	@use "sass:color";
-`
+	@use "sass:color"; // For color.scale
+	@use "sass:math";
+	@use "sass:meta";
 
-scss.global`
+	@function rem($any) {
+		@if not(meta.type-of($any) == number and math.is-unitless($any)) {
+			@return $any; // Passthrough
+		}
+		$num: $any;
+		@if $num == 0 {
+			@return 0;
+		}
+		@return $num / 16 + rem;
+	}
+
+	@function em($any) {
+		@if not(meta.type-of($any) == number and math.is-unitless($any)) {
+			@return $any; // Passthrough
+		}
+		$num: $any;
+		@if $num == 0 {
+			@return 0;
+		}
+		@return $num / 16 + em;
+	}
+
+	@function px($any) {
+		@if not(meta.type-of($any) == number and math.is-unitless($any)) {
+			@return $any; // Passthrough
+		}
+		$num: $any;
+		@if $num == 0 {
+			@return 0;
+		}
+		@return $num + px;
+	}
+
 	@mixin center($dir: row) {
 		display: flex;
 		flex-direction: $dir;

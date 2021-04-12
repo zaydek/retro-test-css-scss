@@ -10,7 +10,11 @@ scss.global`
 	}
 `
 
-function clsx(...classNames) {
+function truthy(v) {
+	return !!v
+}
+
+function cx(...classNames) {
 	return classNames.filter(Boolean).join(" ")
 }
 
@@ -18,77 +22,80 @@ export default function Button({ className, red, green, indigo, children, ...pro
 	return (
 		<>
 			{scss`
+				$shadow-px:   0 0 0 0.5px hsl(0, 0%, 0%, 0.25);
+				$shadow:      0 1px 4px -2px hsl(0, 0%, 0%, 0.25);
+				$shadow-deep: 0 4px 16px -8px hsl(0, 0%, 0%, 0.25);
+
+				$shadow-outline-width: 4px;
+
 				.btn {
-					$bg: whitesmoke;
+					padding: rem(12) rem(16);
+					font: 400 rem(18) / 1.5 system-ui;
+					border-radius: rem(12);
 
-					padding: 12px 24px;
-					font: 400 18px / 1.5 system-ui;
-					border-radius: 12px;
-					background-color: $bg;
-					box-shadow: 0 0 0 0.5px hsl(0, 0%, 0%, 0.25),
-						0 0 0 0.5px hsl(0, 0%, 0%, 0.1),
-						0 2px 4px -2px hsl(0, 0%, 0%, 0.25);
-					&:hover {
-						box-shadow: 0 0 0 0.5px hsl(0, 0%, 0%, 0.25),
-							0 2px 4px -2px hsl(0, 0%, 0%, 0.25),
-							0 12px 24px -12px hsl(0, 0%, 0%, 0.25);
-					}
-					&:focus {
-						box-shadow: 0 0 0 0.5px hsl(210, 100%, 50%),
-							0 0 0 3px hsla(210, 100%, 50%, 0.25);
-					}
-					&:active {
-						background: color.scale($bg, $lightness: -5%);
-					}
-					transition: background 250ms cubic-bezier(0, 0, 0.2, 1),
-						box-shadow 250ms cubic-bezier(0, 0, 0.2, 1);
+					transition: background-color 100ms cubic-bezier(0, 0, 0.2, 1),
+						box-shadow 100ms cubic-bezier(0, 0, 0.2, 1);
 
-					&#{&}--red {
-						$bg: red;
-						font-weight: 500;
-						color: white;
+					&#{&}--base {
+						$bg: hsl(0, 0%, 100%);
+						color: hsla(0, 0%, 0%, 0.75);
 						background-color: $bg;
+						box-shadow: $shadow-px, $shadow;
+						&:focus {
+							box-shadow: 0 0 0 0.5px hsl(210, 100%, 50%),
+								0 0 0 #{3px + 1px} hsla(210, 100%, 50%, 0.25);
+						}
+						&:active { background: color.scale($bg, $lightness: -5%); }
+					}
+					&#{&}--red {
+						$bg: hsl(0, 100%, 50%);
+						font-weight: 500;
+						color: hsla(0, 0%, 100%, 0.975);
+						background-color: $bg;
+						box-shadow: $shadow;
 						&:focus { box-shadow: 0 0 0 3px color.scale($bg, $alpha: -67%); }
 						&:active { background: color.scale($bg, $lightness: -5%); }
 					}
 					&#{&}--indigo {
-						$bg: hsl(240, 100%, 67%);
+						$bg: hsl(240, 100%, 70%);
 						font-weight: 500;
-						color: white;
+						color: hsla(0, 0%, 100%, 0.975);
 						background-color: $bg;
+						box-shadow: $shadow;
 						&:focus { box-shadow: 0 0 0 3px color.scale($bg, $alpha: -67%); }
 						&:active { background: color.scale($bg, $lightness: -5%); }
 					}
 					&#{&}--green {
 						$bg: hsl(100, 100%, 40%);
 						font-weight: 500;
-						color: white;
-						background-color: hsl(100, 100%, 40%);
+						color: hsla(0, 0%, 100%, 0.975);
+						background-color: $bg;
+						box-shadow: $shadow;
 						&:focus { box-shadow: 0 0 0 3px color.scale($bg, $alpha: -67%); }
 						&:active { background: color.scale($bg, $lightness: -5%); }
 					}
 				}
 			`}
-			{(!red && !indigo && !green) && (
-				<button className={clsx("btn", className)}
+			{(!truthy(red) && !truthy(indigo) && !(green)) && (
+				<button className={cx("btn btn--base", className)}
 					{...props}>
 						{children}
 				</button>
 			)}
-			{red && (
-				<button className={clsx("btn btn--red", className)}
+			{truthy(red) && (
+				<button className={cx("btn btn--red", className)}
 					{...props}>
 						{children}
 				</button>
 			)}
-			{indigo && (
-				<button className={clsx("btn btn--indigo", className)}
+			{truthy(indigo) && (
+				<button className={cx("btn btn--indigo", className)}
 					{...props}>
 						{children}
 				</button>
 			)}
-			{green && (
-				<button className={clsx("btn btn--green", className)}
+			{truthy(green) && (
+				<button className={cx("btn btn--green", className)}
 					{...props}>
 						{children}
 				</button>
